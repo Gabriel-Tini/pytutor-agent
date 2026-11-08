@@ -1,0 +1,22 @@
+# Node / Frontend
+node_modules/
+dist/
+
+# Rust / Tauri
+target/
+**/src-tauri/gen/schemas/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Secrets
+.env
+.env.*
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
