@@ -10,9 +10,10 @@ interface Props {
   mensagens: Mensagem[];
   sugestoes: string[];
   onEnviar: (texto: string) => void;
+  carregando?: boolean;
 }
 
-export function ChatArea({ mensagens, sugestoes, onEnviar }: Props) {
+export function ChatArea({ mensagens, sugestoes, onEnviar, carregando }: Props) {
   const [texto, setTexto] = useState("");
   const fimRef = useRef<HTMLDivElement>(null);
 
@@ -38,7 +39,8 @@ export function ChatArea({ mensagens, sugestoes, onEnviar }: Props) {
           <Sparkles size={16} /> Seu mentor de programação com IA
         </div>
         <div className="flex items-center gap-2 rounded-full border border-line bg-card px-4 py-1.5 text-sm text-neutral-700">
-          <span className="h-2.5 w-2.5 rounded-full bg-emerald-600" /> Online
+          <span className={`h-2.5 w-2.5 rounded-full ${carregando ? "bg-amber-500 animate-pulse" : "bg-emerald-600"}`} />
+          {carregando ? "Pensando..." : "Online"}
         </div>
       </header>
 

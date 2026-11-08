@@ -13,7 +13,17 @@ const conquistas = [
   { icon: BookOpen, label: "Aprendiz\nCurioso" },
 ];
 
-export function RightPanel({ jornada, xp, nivel }: { jornada: Skill[]; xp: number; nivel: number }) {
+export function RightPanel({
+  jornada,
+  xp,
+  nivel,
+  onAbrirPratica,
+}: {
+  jornada: Skill[];
+  xp: number;
+  nivel: number;
+  onAbrirPratica?: () => void;
+}) {
   return (
     <aside className="flex w-[300px] shrink-0 flex-col gap-5 overflow-y-auto bg-cream-2 px-5 py-6">
       {/* Nível */}
@@ -35,10 +45,17 @@ export function RightPanel({ jornada, xp, nivel }: { jornada: Skill[]; xp: numbe
 
       {/* Jornada */}
       <div>
-        <div className="mb-3 flex items-center gap-2 text-sm font-semibold"><BarChart3 size={16} /> Sua Jornada</div>
+        <div className="mb-3 flex items-center justify-between">
+          <span className="flex items-center gap-2 text-sm font-semibold"><BarChart3 size={16} /> Sua Jornada</span>
+          <button onClick={onAbrirPratica} className="text-xs text-gold hover:underline">Praticar</button>
+        </div>
         <div className="flex flex-col gap-1.5">
           {jornada.map((s) => (
-            <div key={s.id} className={`rounded-xl px-3 py-2.5 text-sm ${s.status === "refinando" ? "bg-card font-medium shadow-sm" : "bg-card/50"} ${s.status === "bloqueado" ? "text-neutral-500" : ""}`}>
+            <div
+              key={s.id}
+              onClick={() => s.status !== "bloqueado" && onAbrirPratica?.()}
+              className={`rounded-xl px-3 py-2.5 text-sm cursor-pointer transition ${s.status === "refinando" ? "bg-card font-medium shadow-sm hover:ring-1 hover:ring-violet" : "bg-card/50 hover:bg-card"} ${s.status === "bloqueado" ? "text-neutral-500 cursor-not-allowed" : ""}`}
+            >
               <div className="flex items-center gap-3">
                 <IconeStatus s={s} />
                 <span className="flex-1">{s.titulo}</span>
