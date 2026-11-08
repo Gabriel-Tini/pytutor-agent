@@ -6,13 +6,24 @@ import { ChatArea } from "./components/ChatArea";
 import { RightPanel } from "./components/RightPanel";
 import { CodeValidatorDrawer } from "./components/CodeValidatorDrawer";
 import { NeuralSkillTreeModal } from "./components/NeuralSkillTreeModal";
-import { curriculoCompleto, mensagensIniciais, sugestoes, type Mensagem, type ObsidianState, type Skill } from "./data";
+import { ProjectsModal } from "./components/ProjectsModal";
+import { AchievementsModal } from "./components/AchievementsModal";
+import {
+  curriculoCompleto,
+  mensagensIniciais,
+  sugestoes,
+  type Mensagem,
+  type ObsidianState,
+  type Skill,
+} from "./data";
 import { streamTutorChat } from "./gemini";
 
 export default function App() {
   const [mensagens, setMensagens] = useState<Mensagem[]>(mensagensIniciais);
   const [drawerAberto, setDrawerAberto] = useState(false);
   const [skillTreeAberta, setSkillTreeAberta] = useState(false);
+  const [projetosAberto, setProjetosAberto] = useState(false);
+  const [conquistasAberta, setConquistasAberta] = useState(false);
   const [skills, setSkills] = useState<Skill[]>(curriculoCompleto);
   const [obsidian, setObsidian] = useState<ObsidianState | null>(null);
   const [xp, setXp] = useState(620);
@@ -28,14 +39,19 @@ export default function App() {
       const concluidosNums = new Set(
         state.checkpoints_concluidos.map((stem) => stem.split("_")[0])
       );
-      const proxId = state.proximo_checkpoint_id;
 
+      // Grafo de desbloqueio hierárquico:
+      // 1. Se está em concluidosNums -> "dominado" (100%)
+      // 2. Senão, se não tem pais (raiz) OU todos os seus pais estão em concluidosNums -> "refinando" (desbloqueado!)
+      // 3. Caso contrário -> "bloqueado" (0%)
       setSkills((prev) =>
         prev.map((s) => {
           if (concluidosNums.has(s.id)) {
             return { ...s, status: "dominado", progresso: 100 };
           }
-          if (s.id === proxId) {
+          const paisDominados =
+            s.parents.length === 0 || s.parents.every((pId) => concluidosNums.has(pId));
+          if (paisDominados) {
             return { ...s, status: "refinando", progresso: Math.max(s.progresso, 30) };
           }
           return { ...s, status: "bloqueado", progresso: 0 };
@@ -48,7 +64,7 @@ export default function App() {
         setNivel(7 + Math.floor((620 + qtdDominados * 150) / 1000));
       }
     } catch {
-      // Fallback caso rode apenas em navegador fora do Tauri
+      // Fallback caso rode fora do Tauri
     }
   };
 
@@ -57,12 +73,16 @@ export default function App() {
   }, []);
 
   const handleSelecionarMenu = (aba: AbaMenu) => {
-    if (aba === "jornada" || aba === "projetos" || aba === "conquistas") {
+    if (aba === "jornada") {
       setSkillTreeAberta(true);
     } else if (aba === "desafios") {
       setDrawerAberto(true);
+    } else if (aba === "projetos") {
+      setProjetosAberto(true);
+    } else if (aba === "conquistas") {
+      setConquistasAberta(true);
     } else if (aba === "configuracoes") {
-      const novaChave = window.prompt("Configurar GEMINI_API_KEY:", apiKey);
+      const novaChave = window.prompt("Configurar GEMINI_API_KEY (Modelo: gemini-3.6-flash):", apiKey);
       if (novaChave !== null) {
         localStorage.setItem("GEMINI_API_KEY", novaChave.trim());
         setApiKey(novaChave.trim());
@@ -114,7 +134,6 @@ export default function App() {
         );
       }
 
-      // Se o Tutor emitiu um bloco de checkpoint canônico, salva automaticamente no Obsidian!
       if (
         textoAcumulado.includes("<<<START_CHECKPOINT_FILE>>>") &&
         textoAcumulado.includes("<<<END_CHECKPOINT_FILE>>>")
@@ -128,7 +147,7 @@ export default function App() {
             {
               id: crypto.randomUUID(),
               autor: "tutor",
-              texto: `✅ **Checkpoint gravado automaticamente no Obsidian!**\nArquivo salvo em: \`${caminhoSalvo}\`\n\nSua **Neural Skill Tree** foi atualizada (+150 XP)!`,
+              texto: `✅ **Checkpoint gravado automaticamente no Obsidian!**\nArquivo salvo em: \`${caminhoSalvo}\`\n\nNovos nós filhos foram desbloqueados na sua **Árvore de Grafos Neural** (+150 XP)!`,
             },
           ]);
           await sincronizarObsidian();
@@ -158,7 +177,6 @@ export default function App() {
 
   const handleEnviarAoTutor = (codigo: string, output: string) => {
     setDrawerAberto(false);
-    // Se todos os asserts passaram sem erro, avança a barra de progresso do nó em refinamento
     if (output.includes("exit_code: 0")) {
       setSkills((prev) =>
         prev.map((s) => (s.status === "refinando" ? { ...s, progresso: 90 } : s))
@@ -183,6 +201,7 @@ export default function App() {
         nivel={nivel}
         onAbrirPratica={() => setDrawerAberto(true)}
         onAbrirSkillTree={() => setSkillTreeAberta(true)}
+        onAbrirConquistas={() => setConquistasAberta(true)}
       />
 
       <CodeValidatorDrawer
@@ -199,6 +218,24 @@ export default function App() {
         onSelecionarSkill={(skill) => {
           enviar(`Quero estudar o tópico #${skill.id}: ${skill.titulo}`);
         }}
+      />
+
+      <ProjectsModal
+        aberto={projetosAberto}
+        onFechar={() => setProjetosAberto(false)}
+        skills={skills}
+        onIniciarProjeto={(proj) => {
+          setDrawerAberto(true);
+          enviar(`Quero iniciar o projeto prático: "${proj.titulo}". Me passe o roteiro socrático e os casos de assert!`);
+        }}
+      />
+
+      <AchievementsModal
+        aberto={conquistasAberta}
+        onFechar={() => setConquistasAberta(false)}
+        skills={skills}
+        xp={xp}
+        nivel={nivel}
       />
     </div>
   );

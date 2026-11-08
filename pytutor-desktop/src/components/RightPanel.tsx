@@ -19,15 +19,22 @@ export function RightPanel({
   nivel,
   onAbrirPratica,
   onAbrirSkillTree,
+  onAbrirConquistas,
 }: {
   jornada: Skill[];
   xp: number;
   nivel: number;
   onAbrirPratica?: () => void;
   onAbrirSkillTree?: () => void;
+  onAbrirConquistas?: () => void;
 }) {
-  // Exibe na coluna lateral os 4 primeiros conceitos ou a janela em torno do atual
-  const visiveis = jornada.slice(0, 4);
+  // Exibe de forma inteligente os módulos ativos (em refinamento), o último dominado e os próximos bloqueados
+  const primeiroRefinandoIdx = Math.max(
+    0,
+    jornada.findIndex((s) => s.status === "refinando")
+  );
+  const inicioJanela = Math.max(0, primeiroRefinandoIdx - 1);
+  const visiveis = jornada.slice(inicioJanela, inicioJanela + 4);
 
   return (
     <aside className="flex w-[300px] shrink-0 flex-col gap-5 overflow-y-auto bg-cream-2 px-5 py-6">
@@ -90,7 +97,7 @@ export function RightPanel({
       <div>
         <div className="mb-3 flex items-center justify-between">
           <span className="flex items-center gap-2 text-sm font-semibold"><Star size={16} className="fill-ink" /> Conquistas Recentes</span>
-          <button onClick={onAbrirSkillTree} className="flex items-center gap-1 text-xs text-neutral-600 hover:text-ink">
+          <button onClick={onAbrirConquistas} className="flex items-center gap-1 text-xs text-neutral-600 hover:text-ink">
             Ver todas <ArrowRight size={13} />
           </button>
         </div>

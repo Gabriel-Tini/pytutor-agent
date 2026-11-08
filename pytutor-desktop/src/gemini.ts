@@ -67,7 +67,7 @@ export async function* streamTutorChat(
   ];
 
   const responseStream = await ai.models.generateContentStream({
-    model: "gemini-2.5-flash",
+    model: "gemini-3.6-flash",
     contents,
     config: {
       systemInstruction: SYSTEM_INSTRUCTION,
