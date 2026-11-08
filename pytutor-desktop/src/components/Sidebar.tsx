@@ -1,15 +1,22 @@
 import { BarChart3, Trophy, FolderOpen, Star, Settings, MessageSquare, Zap, ChevronRight } from "lucide-react";
 import { YinYang } from "./YinYang";
 
-const itens = [
-  { icon: BarChart3, label: "Minha Jornada" },
-  { icon: Trophy, label: "Desafios" },
-  { icon: FolderOpen, label: "Projetos" },
-  { icon: Star, label: "Conquistas" },
-  { icon: Settings, label: "Configurações" },
+export type AbaMenu = "jornada" | "desafios" | "projetos" | "conquistas" | "configuracoes";
+
+interface Props {
+  onNovoChat: () => void;
+  onSelecionarMenu: (aba: AbaMenu) => void;
+}
+
+const itens: { icon: typeof BarChart3; label: string; id: AbaMenu }[] = [
+  { icon: BarChart3, label: "Minha Jornada", id: "jornada" },
+  { icon: Trophy, label: "Desafios", id: "desafios" },
+  { icon: FolderOpen, label: "Projetos", id: "projetos" },
+  { icon: Star, label: "Conquistas", id: "conquistas" },
+  { icon: Settings, label: "Configurações", id: "configuracoes" },
 ];
 
-export function Sidebar({ onNovoChat }: { onNovoChat: () => void }) {
+export function Sidebar({ onNovoChat, onSelecionarMenu }: Props) {
   return (
     <aside className="relative flex w-[240px] shrink-0 flex-col overflow-hidden bg-ink px-4 py-6 text-neutral-200">
       {/* ondas decorativas */}
@@ -35,14 +42,21 @@ export function Sidebar({ onNovoChat }: { onNovoChat: () => void }) {
       </button>
 
       <nav className="relative flex flex-col gap-1">
-        {itens.map(({ icon: Icon, label }) => (
-          <button key={label} className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-neutral-300 transition hover:bg-white/5 hover:text-white">
+        {itens.map(({ icon: Icon, label, id }) => (
+          <button
+            key={id}
+            onClick={() => onSelecionarMenu(id)}
+            className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-neutral-300 transition hover:bg-white/5 hover:text-white"
+          >
             <Icon size={18} strokeWidth={1.6} /> {label}
           </button>
         ))}
       </nav>
 
-      <div className="relative mt-auto flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.06] p-3">
+      <div
+        onClick={() => onSelecionarMenu("desafios")}
+        className="relative mt-auto flex cursor-pointer items-center gap-3 rounded-xl border border-white/10 bg-white/[0.06] p-3 transition hover:bg-white/10"
+      >
         <Zap size={22} className="shrink-0 fill-gold text-gold" />
         <div className="flex-1">
           <div className="text-sm font-medium text-gold">Bônus de hoje</div>

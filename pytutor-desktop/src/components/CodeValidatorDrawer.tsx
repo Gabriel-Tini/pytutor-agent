@@ -18,15 +18,22 @@ interface Props {
   codigoInicial?: string;
 }
 
-const CODIGO_EXEMPLO = `# Escreva sua solução em Python 3.10+
-def saudacao(nome: str) -> str:
-    return f"Olá, {nome}!"
+const CODIGO_EXEMPLO = `# Fase 1.1 - Desafio: Atualização Imutável de Pesos
+def atualizar_pesos_seguro(pesos: list[float], delta: float) -> list[float]:
+    # TODO: Retorne uma NOVA lista somando 'delta' a cada elemento de 'pesos'
+    # sem alterar a lista 'pesos' original!
+    novos_pesos = [p + delta for p in pesos]
+    return novos_pesos
 
-# Casos de Teste (Assertions)
-assert saudacao("Dev") == "Olá, Dev!"
-assert saudacao("Gabriel") == "Olá, Gabriel!"
+# Casos de Teste Socráticos (Assertions)
+w_original = [0.5, -1.0, 2.0]
+w_atualizado = atualizar_pesos_seguro(w_original, 0.5)
 
-print("✓ Todos os testes passaram com sucesso!")
+assert w_atualizado == [1.0, -0.5, 2.5], f"Valores incorretos: {w_atualizado}"
+assert w_original == [0.5, -1.0, 2.0], "ERRO: Você mutou a lista original in-place!"
+assert id(w_original) != id(w_atualizado), "ERRO: As listas apontam para o mesmo endereço na RAM!"
+
+print("🏆 Todos os asserts passaram! Endereços de memória isolados com sucesso.")
 `;
 
 export function CodeValidatorDrawer({ aberto, onFechar, onEnviarAoTutor, codigoInicial }: Props) {

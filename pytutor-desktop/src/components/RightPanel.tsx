@@ -18,12 +18,17 @@ export function RightPanel({
   xp,
   nivel,
   onAbrirPratica,
+  onAbrirSkillTree,
 }: {
   jornada: Skill[];
   xp: number;
   nivel: number;
   onAbrirPratica?: () => void;
+  onAbrirSkillTree?: () => void;
 }) {
+  // Exibe na coluna lateral os 4 primeiros conceitos ou a janela em torno do atual
+  const visiveis = jornada.slice(0, 4);
+
   return (
     <aside className="flex w-[300px] shrink-0 flex-col gap-5 overflow-y-auto bg-cream-2 px-5 py-6">
       {/* Nível */}
@@ -38,7 +43,7 @@ export function RightPanel({
           </div>
         </div>
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-line">
-          <div className="h-full rounded-full bg-ink transition-all" style={{ width: `${(xp / 1000) * 100}%` }} />
+          <div className="h-full rounded-full bg-ink transition-all" style={{ width: `${Math.min(100, (xp / 1000) * 100)}%` }} />
         </div>
         <div className="mt-2 text-center text-xs text-neutral-600">{xp} / 1.000 XP</div>
       </div>
@@ -47,25 +52,35 @@ export function RightPanel({
       <div>
         <div className="mb-3 flex items-center justify-between">
           <span className="flex items-center gap-2 text-sm font-semibold"><BarChart3 size={16} /> Sua Jornada</span>
-          <button onClick={onAbrirPratica} className="text-xs text-gold hover:underline">Praticar</button>
+          <button onClick={onAbrirSkillTree} className="text-xs font-medium text-gold hover:underline">
+            Árvore Completa
+          </button>
         </div>
         <div className="flex flex-col gap-1.5">
-          {jornada.map((s) => (
+          {visiveis.map((s) => (
             <div
               key={s.id}
-              onClick={() => s.status !== "bloqueado" && onAbrirPratica?.()}
-              className={`rounded-xl px-3 py-2.5 text-sm cursor-pointer transition ${s.status === "refinando" ? "bg-card font-medium shadow-sm hover:ring-1 hover:ring-violet" : "bg-card/50 hover:bg-card"} ${s.status === "bloqueado" ? "text-neutral-500 cursor-not-allowed" : ""}`}
+              onClick={() => (s.status !== "bloqueado" ? onAbrirPratica?.() : onAbrirSkillTree?.())}
+              className={`rounded-xl px-3 py-2.5 text-sm cursor-pointer transition ${
+                s.status === "refinando" ? "bg-card font-medium shadow-sm hover:ring-1 hover:ring-violet" : "bg-card/50 hover:bg-card"
+              } ${s.status === "bloqueado" ? "text-neutral-500" : ""}`}
             >
               <div className="flex items-center gap-3">
                 <IconeStatus s={s} />
-                <span className="flex-1">{s.titulo}</span>
+                <span className="flex-1 truncate">{s.titulo}</span>
                 {s.status === "refinando" && <ChevronRight size={16} />}
               </div>
-              {s.status !== "bloqueado" && (
-                <div className="mt-2 ml-[30px] h-1 overflow-hidden rounded-full bg-line">
-                  <div className={`h-full rounded-full ${s.status === "dominado" ? "bg-gold" : "bg-violet"}`} style={{ width: `${s.progresso}%` }} />
+              <div className="mt-2 ml-[30px] flex items-center gap-2">
+                <div className="h-1 flex-1 overflow-hidden rounded-full bg-line">
+                  <div
+                    className={`h-full rounded-full ${
+                      s.status === "dominado" ? "bg-gold" : s.status === "refinando" ? "bg-violet" : "bg-neutral-400"
+                    }`}
+                    style={{ width: `${s.progresso}%` }}
+                  />
                 </div>
-              )}
+                <span className="text-[10px] text-neutral-500">{s.progresso}%</span>
+              </div>
             </div>
           ))}
         </div>
@@ -75,7 +90,9 @@ export function RightPanel({
       <div>
         <div className="mb-3 flex items-center justify-between">
           <span className="flex items-center gap-2 text-sm font-semibold"><Star size={16} className="fill-ink" /> Conquistas Recentes</span>
-          <button className="flex items-center gap-1 text-xs text-neutral-600">Ver todas <ArrowRight size={13} /></button>
+          <button onClick={onAbrirSkillTree} className="flex items-center gap-1 text-xs text-neutral-600 hover:text-ink">
+            Ver todas <ArrowRight size={13} />
+          </button>
         </div>
         <div className="flex justify-around">
           {conquistas.map(({ icon: Icon, label }) => (

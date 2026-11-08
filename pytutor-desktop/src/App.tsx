@@ -1,17 +1,74 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
-import { Sidebar } from "./components/Sidebar";
+import { Sidebar, type AbaMenu } from "./components/Sidebar";
 import { ChatArea } from "./components/ChatArea";
 import { RightPanel } from "./components/RightPanel";
 import { CodeValidatorDrawer } from "./components/CodeValidatorDrawer";
-import { jornada, mensagensIniciais, sugestoes, type Mensagem } from "./data";
+import { NeuralSkillTreeModal } from "./components/NeuralSkillTreeModal";
+import { curriculoCompleto, mensagensIniciais, sugestoes, type Mensagem, type ObsidianState, type Skill } from "./data";
 import { streamTutorChat } from "./gemini";
 
 export default function App() {
   const [mensagens, setMensagens] = useState<Mensagem[]>(mensagensIniciais);
   const [drawerAberto, setDrawerAberto] = useState(false);
+  const [skillTreeAberta, setSkillTreeAberta] = useState(false);
+  const [skills, setSkills] = useState<Skill[]>(curriculoCompleto);
+  const [obsidian, setObsidian] = useState<ObsidianState | null>(null);
+  const [xp, setXp] = useState(620);
+  const [nivel, setNivel] = useState(7);
   const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem("GEMINI_API_KEY") || "");
   const [gerandoResposta, setGerandoResposta] = useState(false);
+
+  const sincronizarObsidian = async () => {
+    try {
+      const state = await invoke<ObsidianState>("get_obsidian_state");
+      setObsidian(state);
+
+      const concluidosNums = new Set(
+        state.checkpoints_concluidos.map((stem) => stem.split("_")[0])
+      );
+      const proxId = state.proximo_checkpoint_id;
+
+      setSkills((prev) =>
+        prev.map((s) => {
+          if (concluidosNums.has(s.id)) {
+            return { ...s, status: "dominado", progresso: 100 };
+          }
+          if (s.id === proxId) {
+            return { ...s, status: "refinando", progresso: Math.max(s.progresso, 30) };
+          }
+          return { ...s, status: "bloqueado", progresso: 0 };
+        })
+      );
+
+      const qtdDominados = concluidosNums.size;
+      if (qtdDominados > 0) {
+        setXp(620 + qtdDominados * 150);
+        setNivel(7 + Math.floor((620 + qtdDominados * 150) / 1000));
+      }
+    } catch {
+      // Fallback caso rode apenas em navegador fora do Tauri
+    }
+  };
+
+  useEffect(() => {
+    sincronizarObsidian();
+  }, []);
+
+  const handleSelecionarMenu = (aba: AbaMenu) => {
+    if (aba === "jornada" || aba === "projetos" || aba === "conquistas") {
+      setSkillTreeAberta(true);
+    } else if (aba === "desafios") {
+      setDrawerAberto(true);
+    } else if (aba === "configuracoes") {
+      const novaChave = window.prompt("Configurar GEMINI_API_KEY:", apiKey);
+      if (novaChave !== null) {
+        localStorage.setItem("GEMINI_API_KEY", novaChave.trim());
+        setApiKey(novaChave.trim());
+      }
+    }
+  };
 
   const enviar = async (texto: string) => {
     const novaMensagemAluno: Mensagem = { id: crypto.randomUUID(), autor: "aluno", texto };
@@ -22,30 +79,69 @@ export default function App() {
       setDrawerAberto(true);
     }
 
-    if (!apiKey.trim()) {
-      const chavePrompt = window.prompt("Por favor, insira sua GEMINI_API_KEY para streaming com o Tutor:");
+    let chaveAtiva = apiKey.trim() || localStorage.getItem("GEMINI_API_KEY") || "";
+    if (!chaveAtiva) {
+      const chavePrompt = window.prompt("Por favor, insira sua GEMINI_API_KEY para conversar com o Tutor:");
       if (chavePrompt) {
-        localStorage.setItem("GEMINI_API_KEY", chavePrompt.trim());
-        setApiKey(chavePrompt.trim());
+        chaveAtiva = chavePrompt.trim();
+        localStorage.setItem("GEMINI_API_KEY", chaveAtiva);
+        setApiKey(chaveAtiva);
       } else {
         return;
       }
     }
-
-    const chaveAtiva = apiKey.trim() || localStorage.getItem("GEMINI_API_KEY") || "";
-    if (!chaveAtiva) return;
 
     setGerandoResposta(true);
     const tutorId = crypto.randomUUID();
     setMensagens((ms) => [...ms, { id: tutorId, autor: "tutor", texto: "..." }]);
 
     try {
+      const dataAtual = new Date().toISOString().slice(0, 10);
+      const comando = texto.trim() === "/checkpoint" ? "/checkpoint" : "ESTUDO";
+      const payloadContextual = `<session_payload>
+  <caminho_destino_md>${obsidian?.checkpoints_dir || "D:/Obsidian/IA e Aprendizado de Maquina/Checkpoints"}</caminho_destino_md>
+  <data_atual>${dataAtual}</data_atual>
+  <ultimo_checkpoint_md>${obsidian?.ultimo_checkpoint_md || "NENHUM"}</ultimo_checkpoint_md>
+  <comando>${comando}</comando>
+  <mensagem_aluno>${texto}</mensagem_aluno>
+</session_payload>`;
+
       let textoAcumulado = "";
-      for await (const chunk of streamTutorChat(chaveAtiva, historicoAtual, texto)) {
+      for await (const chunk of streamTutorChat(chaveAtiva, historicoAtual, payloadContextual)) {
         textoAcumulado += chunk;
         setMensagens((prev) =>
           prev.map((m) => (m.id === tutorId ? { ...m, texto: textoAcumulado } : m))
         );
+      }
+
+      // Se o Tutor emitiu um bloco de checkpoint canônico, salva automaticamente no Obsidian!
+      if (
+        textoAcumulado.includes("<<<START_CHECKPOINT_FILE>>>") &&
+        textoAcumulado.includes("<<<END_CHECKPOINT_FILE>>>")
+      ) {
+        try {
+          const caminhoSalvo = await invoke<string>("save_checkpoint_block", {
+            rawText: textoAcumulado,
+          });
+          setMensagens((prev) => [
+            ...prev,
+            {
+              id: crypto.randomUUID(),
+              autor: "tutor",
+              texto: `✅ **Checkpoint gravado automaticamente no Obsidian!**\nArquivo salvo em: \`${caminhoSalvo}\`\n\nSua **Neural Skill Tree** foi atualizada (+150 XP)!`,
+            },
+          ]);
+          await sincronizarObsidian();
+        } catch (errSalvar) {
+          setMensagens((prev) => [
+            ...prev,
+            {
+              id: crypto.randomUUID(),
+              autor: "tutor",
+              texto: `⚠️ Não foi possível gravar o checkpoint no disco: ${String(errSalvar)}`,
+            },
+          ]);
+        }
       }
     } catch (err: unknown) {
       setMensagens((prev) =>
@@ -62,13 +158,19 @@ export default function App() {
 
   const handleEnviarAoTutor = (codigo: string, output: string) => {
     setDrawerAberto(false);
+    // Se todos os asserts passaram sem erro, avança a barra de progresso do nó em refinamento
+    if (output.includes("exit_code: 0")) {
+      setSkills((prev) =>
+        prev.map((s) => (s.status === "refinando" ? { ...s, progresso: 90 } : s))
+      );
+    }
     const mensagemFormatada = `Submissão de Código para Auditoria Socrática:\n\n\`\`\`python\n${codigo}\n\`\`\`\n\n**Saída do Terminal Local (Python):**\n\`\`\`text\n${output}\n\`\`\``;
     enviar(mensagemFormatada);
   };
 
   return (
     <div className="relative flex h-screen w-screen overflow-hidden bg-ink">
-      <Sidebar onNovoChat={() => setMensagens([])} />
+      <Sidebar onNovoChat={() => setMensagens(mensagensIniciais)} onSelecionarMenu={handleSelecionarMenu} />
       <ChatArea
         mensagens={mensagens}
         sugestoes={sugestoes}
@@ -76,16 +178,27 @@ export default function App() {
         carregando={gerandoResposta}
       />
       <RightPanel
-        jornada={jornada}
-        xp={620}
-        nivel={7}
+        jornada={skills}
+        xp={xp}
+        nivel={nivel}
         onAbrirPratica={() => setDrawerAberto(true)}
+        onAbrirSkillTree={() => setSkillTreeAberta(true)}
       />
 
       <CodeValidatorDrawer
         aberto={drawerAberto}
         onFechar={() => setDrawerAberto(false)}
         onEnviarAoTutor={handleEnviarAoTutor}
+      />
+
+      <NeuralSkillTreeModal
+        aberto={skillTreeAberta}
+        onFechar={() => setSkillTreeAberta(false)}
+        skills={skills}
+        obsidian={obsidian}
+        onSelecionarSkill={(skill) => {
+          enviar(`Quero estudar o tópico #${skill.id}: ${skill.titulo}`);
+        }}
       />
     </div>
   );

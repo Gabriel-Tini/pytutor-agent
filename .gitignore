@@ -5,6 +5,8 @@ dist/
 # Rust / Tauri
 target/
 **/src-tauri/gen/schemas/
+PyTutor-Desktop.exe
+*.log
 
 # Python
 __pycache__/
