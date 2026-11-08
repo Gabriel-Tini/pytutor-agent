@@ -18,22 +18,22 @@ interface Props {
   codigoInicial?: string;
 }
 
-const CODIGO_EXEMPLO = `# Fase 1.1 - Desafio: Atualização Imutável de Pesos
-def atualizar_pesos_seguro(pesos: list[float], delta: float) -> list[float]:
-    # TODO: Retorne uma NOVA lista somando 'delta' a cada elemento de 'pesos'
-    # sem alterar a lista 'pesos' original!
-    novos_pesos = [p + delta for p in pesos]
-    return novos_pesos
+const CODIGO_EXEMPLO = `# 🌱 Módulo #001 - Desafio: Criando suas Primeiras Variáveis!
+# Instruções passo a passo:
+# 1. Crie uma variável chamada epocas guardando o número 10
+# 2. Crie uma variável chamada meta_acerto guardando o número 95.5
+# 3. Crie uma variável chamada meu_nome guardando um texto com seu nome entre aspas
 
-# Casos de Teste Socráticos (Assertions)
-w_original = [0.5, -1.0, 2.0]
-w_atualizado = atualizar_pesos_seguro(w_original, 0.5)
+epocas = 10
+meta_acerto = 95.5
+meu_nome = "Gabriel"
 
-assert w_atualizado == [1.0, -0.5, 2.5], f"Valores incorretos: {w_atualizado}"
-assert w_original == [0.5, -1.0, 2.0], "ERRO: Você mutou a lista original in-place!"
-assert id(w_original) != id(w_atualizado), "ERRO: As listas apontam para o mesmo endereço na RAM!"
+# --- Verificação Automática do Mentor (Não precisa mexer abaixo!) ---
+assert epocas == 10, "A variável 'epocas' precisa guardar o número 10"
+assert meta_acerto == 95.5, "A variável 'meta_acerto' precisa guardar 95.5 (use ponto!)"
+assert isinstance(meu_nome, str) and len(meu_nome) > 0, "A variável 'meu_nome' precisa ser um texto entre aspas!"
 
-print("🏆 Todos os asserts passaram! Endereços de memória isolados com sucesso.")
+print("🎉 Parabéns! Você criou suas 3 primeiras variáveis no Python com perfeição!")
 `;
 
 export function CodeValidatorDrawer({ aberto, onFechar, onEnviarAoTutor, codigoInicial }: Props) {

@@ -60,36 +60,36 @@ export const FASES_CURRICULARES: Record<number, { titulo: string; subtitulo: str
  */
 export const curriculoCompleto: Skill[] = [
   // =========================================================================
-  // FASE 1: PYTHON BÁSICO COM MENTALIDADE DE DADOS
+  // FASE 1: PYTHON BÁSICO COM MENTALIDADE DE DADOS (DO ABSOLUTO ZERO)
   // =========================================================================
   {
     id: "001",
-    titulo: "Variáveis, Memória & id()",
+    titulo: "Criando suas Primeiras Variáveis",
     fase: 1,
     nivelGrafo: 1,
     status: "refinando",
-    progresso: 30,
-    descricao: "Alocação PyObject no Heap, ponteiros, referências e mutabilidade.",
+    progresso: 0,
+    descricao: "O que é uma variável (x = 10), como guardar valores na memória e dar bons nomes.",
     parents: [],
   },
   {
     id: "002",
-    titulo: "Tipos Primitivos & Operadores",
+    titulo: "Números, Textos e Contas Simples",
     fase: 1,
     nivelGrafo: 2,
     status: "bloqueado",
     progresso: 0,
-    descricao: "int, float (IEEE 754), bool, str e operadores aritméticos/lógicos.",
+    descricao: "Tipos básicos (int, float, texto) e operações (+, -, *, /) passo a passo.",
     parents: ["001"],
   },
   {
     id: "003",
-    titulo: "Saída, print() & f-strings",
+    titulo: "Mostrando Resultados: print() & f-strings",
     fase: 1,
     nivelGrafo: 2,
     status: "bloqueado",
     progresso: 0,
-    descricao: "Inspeção de variáveis, formatação de precisão numérica e logs.",
+    descricao: "Como fazer o Python conversar com você na tela e exibir o valor das variáveis.",
     parents: ["001"],
   },
   {
@@ -415,36 +415,61 @@ export const mensagensIniciais: Mensagem[] = [
   {
     id: "m1",
     autor: "aluno",
-    texto: "Iniciar trilha socrática na Fase 1.1 (Zero Caixa-Preta).",
+    texto: "Olá! Quero começar minha jornada em Python para IA do absoluto zero.",
   },
   {
     id: "m2",
     autor: "tutor",
-    texto: `### 🎓 [Fase 1.1]: Variáveis, Ponteiros e Alocação de Memória em CPython
+    texto: `### 🌱 [Fase 1 - Módulo #001]: Criando suas Primeiras Variáveis
 
-**2. 🧠 Fundamento de Python & Conexão com IA:**
-Em Python, variáveis **não são caixas** que guardam valores; são **rótulos (ponteiros)** que apontam para estruturas \`PyObject\` alocadas no Heap da memória RAM. Ao dominar como criar e inspecionar variáveis com \`id()\`, você desbloqueará na sua Árvore os dois próximos passos diretos: **Tipos Primitivos & Operadores (#002)** e **Saída, print() & f-strings (#003)**.
+Seja muito bem-vindo, Gabriel! 😊 Fico muito feliz em ser seu mentor nessa jornada. Vamos começar **do zero absoluto**, sem pressa e um passo de cada vez. Se qualquer coisa não ficar clara, é só me falar que explico de outro jeito!
 
-**3. 📐 Dedução Matemática Passo a Passo:**
-Seja um vetor de pesos $w \\in \\mathbb{R}^d$. Uma atribuição direta $v = w$ não copia o vetor ($O(1)$ em memória, mesmo endereço $\\text{addr}(v) = \\text{addr}(w)$), enquanto uma cópia explícita aloca um novo bloco contíguo ($O(d)$ em memória, $\\text{addr}(v) \\neq \\text{addr}(w)$).
+---
 
-**4. 💻 Tradução Linha a Linha para Python:**
+**1. 💡 A Ideia Simples (O que é uma Variável?):**
+Imagine que a memória do seu computador é um grande armário cheio de gavetas. Quando queremos guardar uma informação para usar depois (como a sua idade ou a nota de um teste), nós colocamos esse valor numa gaveta e colamos uma **etiqueta com um nome** na frente dela.
+
+No Python, essa etiqueta se chama **variável**! Para criar uma, basta escrever o **nome da etiqueta**, o sinal de igual \`=\` (que significa *"recebe"* ou *"guarde aqui"*) e o **valor**:
+- Na Inteligência Artificial, usamos variáveis o tempo todo para guardar configurações simples, como quantas vezes a IA vai estudar (\`epocas = 10\`) ou o nome do nosso robô (\`nome_ia = "Jarvis"\`).
+
+---
+
+**2. 🔢 A Ponte com a Matemática (Sem Mistério):**
+Sabe quando na escola a gente via algo como:
+$$x = 5$$
+Na matemática, $x$ é só uma letra que guarda o número $5$. No Python é **exatamente a mesma coisa**, só que em vez de usar letras soltas como $x$, gostamos de dar nomes fáceis de entender, como \`pontos = 5\`.
+
+---
+
+**3. 💻 Exemplo Passo a Passo no Python:**
+Veja como criamos 3 variáveis simples em Python (tudo o que vem depois do símbolo \`#\` é apenas um comentário explicativo para humanos, o Python ignora):
+
 \`\`\`python
-w = [0.5, -1.2, 0.8]  # Aloca lista no Heap
-v = w                 # v aponta para o MESMO endereço de w
-copia = w.copy()      # Aloca NOVO vetor independente
+# 1. Guardando um número inteiro (sem vírgula) na etiqueta 'idade'
+idade = 25
 
-print(id(w) == id(v))      # True (mesmo objeto!)
-print(id(w) == id(copia))  # False (objetos distintos)
+# 2. Guardando um número com casas decimais (usamos PONTO no lugar da vírgula!)
+nota = 9.5
+
+# 3. Guardando um texto (textos sempre ficam entre aspas!)
+aluno = "Gabriel"
 \`\`\`
 
-**5. ⚡ Desafio Prático Local:**
-Clique em **"Vamos praticar?"** abaixo para abrir o Validador Local. Complete a função \`atualizar_pesos_seguro(pesos, delta)\` para que ela retorne uma **nova lista** com cada peso somado a \`delta\`, **sem modificar** a lista original \`pesos\` passada como argumento!`,
+---
+
+**4. 🎯 Sua Vez de Praticar (Pequeno Desafio #001):**
+Vamos colocar a mão na massa? Clique no botão **"Vamos praticar?"** aqui embaixo.
+Lá no editor, seu único desafio é criar **3 variáveis simples**:
+1. Uma variável chamada \`epocas\` guardando o número \`10\`
+2. Uma variável chamada \`meta_acerto\` guardando o número \`95.5\`
+3. Uma variável chamada \`meu_nome\` guardando o seu nome entre aspas (ex: \`"Gabriel"\`)
+
+Depois clique em **"Executar & Testar"** e me envie o resultado! Estou aqui torcendo por você! 🚀`,
   },
 ];
 
 export const sugestoes = [
   "Vamos praticar?",
-  "Explique melhor o PyObject na RAM",
-  "/checkpoint",
+  "Me dê mais um exemplo de variável",
+  "Por que usamos ponto em vez de vírgula nos números?",
 ];

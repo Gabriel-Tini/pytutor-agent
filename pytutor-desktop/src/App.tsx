@@ -26,8 +26,8 @@ export default function App() {
   const [conquistasAberta, setConquistasAberta] = useState(false);
   const [skills, setSkills] = useState<Skill[]>(curriculoCompleto);
   const [obsidian, setObsidian] = useState<ObsidianState | null>(null);
-  const [xp, setXp] = useState(620);
-  const [nivel, setNivel] = useState(7);
+  const [xp, setXp] = useState(0);
+  const [nivel, setNivel] = useState(1);
   const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem("GEMINI_API_KEY") || "");
   const [gerandoResposta, setGerandoResposta] = useState(false);
 
@@ -40,9 +40,9 @@ export default function App() {
         state.checkpoints_concluidos.map((stem) => stem.split("_")[0])
       );
 
-      // Grafo de desbloqueio hierárquico:
+      // Grafo de desbloqueio hierárquico começando em 0% no Nível 1:
       // 1. Se está em concluidosNums -> "dominado" (100%)
-      // 2. Senão, se não tem pais (raiz) OU todos os seus pais estão em concluidosNums -> "refinando" (desbloqueado!)
+      // 2. Senão, se não tem pais (raiz) OU todos os seus pais estão em concluidosNums -> "refinando" (desbloqueado, começa em 0%)
       // 3. Caso contrário -> "bloqueado" (0%)
       setSkills((prev) =>
         prev.map((s) => {
@@ -52,17 +52,15 @@ export default function App() {
           const paisDominados =
             s.parents.length === 0 || s.parents.every((pId) => concluidosNums.has(pId));
           if (paisDominados) {
-            return { ...s, status: "refinando", progresso: Math.max(s.progresso, 30) };
+            return { ...s, status: "refinando", progresso: s.progresso };
           }
           return { ...s, status: "bloqueado", progresso: 0 };
         })
       );
 
       const qtdDominados = concluidosNums.size;
-      if (qtdDominados > 0) {
-        setXp(620 + qtdDominados * 150);
-        setNivel(7 + Math.floor((620 + qtdDominados * 150) / 1000));
-      }
+      setXp(qtdDominados * 200);
+      setNivel(1 + Math.floor((qtdDominados * 200) / 1000));
     } catch {
       // Fallback caso rode fora do Tauri
     }
